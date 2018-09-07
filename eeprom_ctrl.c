@@ -1,5 +1,10 @@
 /* Modulo para controle da EEPROM (bacon cape) */
 /* Documentação da EEPROM: http://learning.media.mit.edu/projects/gogo/parts_pdf/EEPROM%20-%2024LC256.pdf */
+/*
+*    IMPORTANTE:
+* Para a escrita na EEPROm funcionar, eh preciso que o capacitor C2 seja curto-
+* circuitado. Sem fazer isso, somente a leitura será possivel.
+*/
 #include "eeprom_ctrl.h"
 #include <stdio.h>
 #include <stdlib.h>
