@@ -5,14 +5,6 @@
 #include <unistd.h>
 #include <string.h>
 
-//#define ENABLE_DEBUG_MESSAGES_LED
-
-#ifdef ENABLE_DEBUG_MESSAGES_LED
-   #define DEBUG_LED(...) printf(__VA_ARGS__)
-#else
-   #define DEBUG_LED
-#endif
-
 int ret_min_led(int * SysReqs, int length)
 {
     int	i;
@@ -43,8 +35,6 @@ int setup_led(TLEDCtrl * ptLED)
     sprintf(cmd_gpio, "echo out > /sys/class/gpio/gpio%d/direction", ptLED-> gpio_num);
     sys_req[1] = system(cmd_gpio);
         
-    DEBUG_LED("\n\r[LED] Status (setup): %d %d\n", sys_req[0], sys_req[1]);
-
     ret = ret_min_led(sys_req,2);
 
     if (ret > -1)

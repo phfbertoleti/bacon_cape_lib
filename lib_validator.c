@@ -7,6 +7,7 @@
 #include "slider_ctrl.h"
 #include "button_ctrl.h"
 #include "eeprom_ctrl.h"
+#include "display7seg_ctrl.h"
 
 /* Defines */
 #define NUMERO_TESTES_LEDS   3
@@ -20,6 +21,7 @@ int main(void)
    TSLIDERCtrl slider;
    TBUTTONCtrl botao;
    TEEPROMCtrl eeprom;
+   TDISP7SEGCtrl disp7seg;
 
    /* Popula as informacoes dos leds */
    LED_verde.led_config = 0;
@@ -42,6 +44,11 @@ int main(void)
    /* Popula as informacoes da EEPROM */
    eeprom.eeprom_config = 0;
 
+   /* Popula as informacoes do display 7 segmentos */
+   disp7seg.display7seg_config = 0;
+   disp7seg.write_point = 0;
+   disp7seg.gpio_num_clear = 48;
+
    /* Faz o setup dos leds, botao e slider */
    setup_led(&LED_verde);
    setup_led(&LED_azul);
@@ -49,20 +56,37 @@ int main(void)
    setup_slider(&slider);
    setup_button(&botao);
    setup_eeprom(&eeprom);
+   setup_display7seg(&disp7seg);
 
+   
    printf("\n\r[TESTE DE EEPROM]\n");
 
    eeprom.high_addr_byte = 0x00;
    eeprom.low_addr_byte = 0x00;
-   
-   for(i=0; i<EEPROM_PAGE_SIZE; i++)
-      eeprom.page_to_write[i] = (char)i;
+   eeprom.byte_to_write = 0xEA;
 
-   write_page_eeprom(&eeprom);
-   //read_byte_eeprom(&eeprom);
+   write_byte_eeprom(&eeprom);
+   read_byte_eeprom(&eeprom);
+
+   if (eeprom.byte_read == eeprom.byte_to_write)
+      printf("\n\r[TESTE DE EEPROM] Ok. Byte escrito: %02X  Byte lido: %02X\n", eeprom.byte_to_write, eeprom.byte_read);
+   else
+      printf("\n\r[TESTE DE EEPROM] Erro. Byte escrito: %02X  Byte lido: %02X\n", eeprom.byte_to_write, eeprom.byte_read);
    
+
    close_eeprom(&eeprom);
-   return 0;
+   
+   printf("\n\r[TESTE DE DISPLAY 7 SEGMENTOS]\n");   
+
+   for(i=0; i<0x10; i++)
+   {
+      printf("\n\r[TESTE DE DISPLAY 7 SEGMENTOS] Caracter %02X\n",i);
+      disp7seg.alfanum_to_write = (char)i;
+      write_alfanum_display7seg(&disp7seg);   
+      usleep(500000);
+   }
+
+   close_display7seg(&disp7seg);
 
    /* Rotina de validacao / testes */
    for(i=0; i<NUMERO_TESTES_LEDS; i++)

@@ -5,14 +5,6 @@
 #include <unistd.h>
 #include <string.h>
 
-//#define ENABLE_DEBUG_MESSAGES_BUTTON
-
-#ifdef ENABLE_DEBUG_MESSAGES_BUTTON
-   #define DEBUG_BUTTON(...) printf(__VA_ARGS__)
-#else
-   #define DEBUG_BUTTON
-#endif
-
 int ret_min_button(int * SysReqs, int length)
 {
     int	i;
@@ -43,8 +35,6 @@ int setup_button(TBUTTONCtrl * ptBUTTON)
     sprintf(cmd_gpio,"echo in > /sys/class/gpio/gpio%d/direction", ptBUTTON->gpio_num);
     sys_req[1] = system(cmd_gpio);
    
-    DEBUG_BUTTON("\r\n[BUTTON] Status (setup): %d %d\n", sys_req[0], sys_req[1]);
-
     ret = ret_min_button(sys_req,2);
 
     if (ret > -1)

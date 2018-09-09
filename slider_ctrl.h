@@ -15,3 +15,4 @@ typedef struct {
 
 int setup_slider(TSLIDERCtrl * ptSLIDER);
 int read_slider(TSLIDERCtrl * ptSLIDER);
+int read_slider_percentage(TSLIDERCtrl * ptSLIDER);

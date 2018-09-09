@@ -5,13 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 
-//#define ENABLE_DEBUG_MESSAGES_SLIDER
-
-#ifdef ENABLE_DEBUG_MESSAGES_SLIDER
-   #define DEBUG_SLIDER(...) printf(__VA_ARGS__)
-#else
-   #define DEBUG_SLIDER
-#endif
+#define ADC_MAX_VALUE    4095 //ADC tem 11 bits, logo: Valor max = 2^11 - 1 = 4095
 
 int setup_slider(TSLIDERCtrl * ptSLIDER)
 {
@@ -22,8 +16,6 @@ int setup_slider(TSLIDERCtrl * ptSLIDER)
     	return SLIDER_CTRL_ERROR;
     
     sys_req = system("sudo sh -c \"echo 'BB-ADC' > /sys/devices/platform/bone_capemgr/slots\"");
-    
-    DEBUG_SLIDER("\r\n[SLIDER] Status (setup): %d\n", sys_req);
 
     if (sys_req > -1)
     	ptSLIDER->slider_config = 1;
@@ -35,7 +27,6 @@ int setup_slider(TSLIDERCtrl * ptSLIDER)
 
     return sys_req;
 }
-
 
 int read_slider(TSLIDERCtrl * ptSLIDER)
 {
@@ -58,4 +49,19 @@ int read_slider(TSLIDERCtrl * ptSLIDER)
 
     ptSLIDER->slider_value = atoi(output_analog_read);    
     return SLIDER_CTRL_SUCCESS;
+}
+
+int read_slider_percentage(TSLIDERCtrl * ptSLIDER)
+{
+    int raw_adc_value;
+    int percentage;
+
+    raw_adc_value = read_slider(ptSLIDER);
+
+    if (raw_adc_value == -1)
+        return SLIDER_CTRL_ERROR;
+    else    
+        percentage = (int)(((float)raw_adc_value/ADC_MAX_VALUE)*100);
+    
+    return percentage;
 }
