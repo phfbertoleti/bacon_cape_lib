@@ -10,5 +10,7 @@ This library is under development. At this moment it covers the following Bacon 
 
 Also, this repository contains two examples:
 - lib_validator: a simple program to validate all features covered by the bacon_cape_lib
-- mqtt_example: a simple program to interact with LEDs, slider and button over Internet (using MQTT protocol). For this example, [Paho MQTT C library](https://github.com/eclipse/paho.mqtt.c) is required.
+- mqtt_example: a simple program to interact with LEDs, slider and button over Internet using MQTT protocol. For this example, [Paho MQTT C library](https://github.com/eclipse/paho.mqtt.c) is required.
+By doing this, you can get your Bacon Cape's information in a dashboard using [MQTT Dash App](https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=pt_BR), for example:
 
+![MQTT Dash App](mqtt_example/mqtt_dash_app_example.jpg?raw=true "MQTT Dash App interaction")
