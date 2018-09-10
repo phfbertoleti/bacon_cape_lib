@@ -1,4 +1,8 @@
-/* Programa de validacao da lib (bacon cape) */
+/* Program sample for lib's validation only */
+/*
+ * Author: Pedro Bertoleti
+ */
+
 /* Includes */
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,56 +14,52 @@
 #include "display7seg_ctrl.h"
 
 /* Defines */
-#define NUMERO_TESTES_LEDS   3
+#define TEST_NUM_LEDS   3
 
+/* Main program */
 int main(void)
 {
    int i;
-   TLEDCtrl LED_verde;
-   TLEDCtrl LED_azul;
-   TLEDCtrl LED_vermelho;
+   TLEDCtrl LED_green;
+   TLEDCtrl LED_blue;
+   TLEDCtrl LED_red;
    TSLIDERCtrl slider;
-   TBUTTONCtrl botao;
+   TBUTTONCtrl push_button;
    TEEPROMCtrl eeprom;
    TDISP7SEGCtrl disp7seg;
 
-   /* Popula as informacoes dos leds */
-   LED_verde.led_config = 0;
-   LED_verde.gpio_num = 50;
+   /* Fill information about all bacon cape's features covered by lib */
+   LED_green.led_config = 0;
+   LED_green.gpio_num = 50;
 
-   LED_azul.led_config = 0;
-   LED_azul.gpio_num = 51;
+   LED_blue.led_config = 0;
+   LED_blue.gpio_num = 51;
 
-   LED_vermelho.led_config = 0;
-   LED_vermelho.gpio_num = 7;
+   LED_red.led_config = 0;
+   LED_red.gpio_num = 7;
 
-   /* Popula as informacoes do slider */
    slider.slider_config = 0;
    slider.slider_analog_input = 5;
 
-   /* Popula as informacoes do botao */
-   botao.button_config = 0;
-   botao.gpio_num = 22;
+   push_button.button_config = 0;
+   push_button.gpio_num = 22;
 
-   /* Popula as informacoes da EEPROM */
    eeprom.eeprom_config = 0;
 
-   /* Popula as informacoes do display 7 segmentos */
    disp7seg.display7seg_config = 0;
    disp7seg.write_point = 0;
    disp7seg.gpio_num_clear = 48;
 
-   /* Faz o setup dos leds, botao e slider */
-   setup_led(&LED_verde);
-   setup_led(&LED_azul);
-   setup_led(&LED_vermelho);
+   /* Setup all bacon cape's features covered by lib */
+   setup_led(&LED_green);
+   setup_led(&LED_blue);
+   setup_led(&LED_red);
    setup_slider(&slider);
-   setup_button(&botao);
+   setup_button(&push_button);
    setup_eeprom(&eeprom);
    setup_display7seg(&disp7seg);
 
-   
-   printf("\n\r[TESTE DE EEPROM]\n");
+   printf("\n\r[EEPROM TEST]\n");
 
    eeprom.high_addr_byte = 0x00;
    eeprom.low_addr_byte = 0x00;
@@ -69,60 +69,57 @@ int main(void)
    read_byte_eeprom(&eeprom);
 
    if (eeprom.byte_read == eeprom.byte_to_write)
-      printf("\n\r[TESTE DE EEPROM] Ok. Byte escrito: %02X  Byte lido: %02X\n", eeprom.byte_to_write, eeprom.byte_read);
+      printf("\n\r[EEPROM TEST] EEPROM test Ok. Write: %02X  Read: %02X\n", eeprom.byte_to_write, eeprom.byte_read);
    else
-      printf("\n\r[TESTE DE EEPROM] Erro. Byte escrito: %02X  Byte lido: %02X\n", eeprom.byte_to_write, eeprom.byte_read);
-   
+      printf("\n\r[EEPROM TEST] Errors occured in EEPROM test. Write: %02X  Read: %02X\n", eeprom.byte_to_write, eeprom.byte_read);
 
    close_eeprom(&eeprom);
-   
-   printf("\n\r[TESTE DE DISPLAY 7 SEGMENTOS]\n");   
+
+   printf("\n\r[DISPLAY TEST]\n");   
 
    for(i=0; i<0x10; i++)
    {
-      printf("\n\r[TESTE DE DISPLAY 7 SEGMENTOS] Caracter %02X\n",i);
+      printf("\n\r[DISPLAY TEST] Alfanumeric char printed: %02X\n",i);
       disp7seg.alfanum_to_write = (char)i;
-      write_alfanum_display7seg(&disp7seg);   
+      write_alfanum_display7seg(&disp7seg);
       usleep(500000);
    }
 
-   close_display7seg(&disp7seg);
-
-   /* Rotina de validacao / testes */
-   for(i=0; i<NUMERO_TESTES_LEDS; i++)
+   /* Push-button, slider and LEDs validation */
+   for(i=0; i<TEST_NUM_LEDS; i++)
    {
-      turn_on_led(&LED_verde);
+      turn_on_led(&LED_green);
       sleep(1);
-      turn_off_led(&LED_verde);
-      sleep(1);
-
-      read_slider(&slider);
-      printf("\n\rSlider: %d\n", slider.slider_value);
-
-      read_button(&botao);
-      printf("\n\rBotao: %d\n", botao.button_state);
-
-      turn_on_led(&LED_azul);
-      sleep(1);
-      turn_off_led(&LED_azul);
+      turn_off_led(&LED_green);
       sleep(1);
 
       read_slider(&slider);
       printf("\n\rSlider: %d\n", slider.slider_value);
 
-      read_button(&botao);
-      printf("\n\rBotao: %d\n", botao.button_state);
+      read_button(&push_button);
+      printf("\n\rPush-button state: %d\n", push_button.button_state);
 
-      turn_on_led(&LED_vermelho);
+      turn_on_led(&LED_blue);
       sleep(1);
-      turn_off_led(&LED_vermelho);
+      turn_off_led(&LED_blue);
       sleep(1);
 
       read_slider(&slider);
       printf("\n\rSlider: %d\n", slider.slider_value);
 
-      read_button(&botao);
-      printf("\n\rBotao: %d\n", botao.button_state);
+      read_button(&push_button);
+      printf("\n\rPush-button state: %d\n", push_button.button_state);
+
+      turn_on_led(&LED_red);
+      sleep(1);
+      turn_off_led(&LED_red);
+      sleep(1);
+
+      read_slider(&slider);
+      printf("\n\rSlider: %d\n", slider.slider_value);
+
+      read_button(&push_button);
+      printf("\n\rPush-button state: %d\n", push_button.button_state);
    }
 
 }
