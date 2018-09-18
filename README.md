@@ -14,3 +14,7 @@ Also, this repository contains two examples:
 By doing this, you can get your Bacon Cape's information in a dashboard using [MQTT Dash App](https://play.google.com/store/apps/details?id=net.routix.mqttdash&hl=pt_BR), for example:
 
 ![MQTT Dash App](mqtt_example/mqtt_dash_app_example.jpg?raw=true "MQTT Dash App interaction")
+
+
+The bacon cape library is Doxygen compatible. This means it can be generated based on its source code executng the following command:
+doxygen doxygen_config_file

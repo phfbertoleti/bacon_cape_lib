@@ -122,4 +122,5 @@ int main(void)
       printf("\n\rPush-button state: %d\n", push_button.button_state);
    }
 
+   return 0;
 }
