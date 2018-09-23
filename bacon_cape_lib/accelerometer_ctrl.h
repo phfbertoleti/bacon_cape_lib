@@ -26,7 +26,7 @@ typedef enum
 {
 /** AccStatus_ready indicates that accelerometer is ready to operate
 */
-    AccStatus_ready,
+    AccStatus_ready = 0,
 /** AccStatus_not_ready indicates that accelerometer isn't ready to operate
 */
     AccStatus_not_ready
@@ -43,7 +43,7 @@ typedef enum
 {
 /** AccMode_standby indicates that accelerometer is in stand-by operation mode
 */
-    AccMode_standby,
+    AccMode_standby = 0,
 /** AccMode_wake indicates that accelerometer is in wake-up operation mode
 */
     AccMode_wake,
@@ -62,7 +62,7 @@ typedef enum
 {
 /** AccSensibility_2g corresponds to the configuration of +-2g max acceleration allowed
 */
-    AccSensibility_2g,
+    AccSensibility_2g = 0,
 /** AccSensibility_4g corresponds to the configuration of +-4g max acceleration allowed
 */
     AccSensibility_4g,
@@ -72,6 +72,38 @@ typedef enum
     AccSensibility_invalid,
 }TAccSensibility;
 
+
+/** @brief Accelerometer available ODR (Output Data Rate)
+*/
+/* Enum - accelerometer sensibility */
+typedef enum
+{
+/** ODR_800HZ corresponds to the 800Hz ODR
+*/
+    AccODR_800HZ = 0,
+/** ODR_400HZ corresponds to the 400Hz ODR
+*/
+    AccODR_400HZ,
+/** ODR_200HZ corresponds to the 200Hz ODR
+*/
+    AccODR_200HZ,
+/** ODR_100HZ corresponds to the 100Hz ODR
+*/
+    AccODR_100HZ,
+/** ODR_50HZ corresponds to the 50Hz ODR
+*/
+    AccODR_50HZ,
+/** ODR_12_5_HZ corresponds to the 12.5Hz ODR
+*/
+    ODR_12_5_HZ,
+/** ODR_6_25_HZ corresponds to the 6.25Hz ODR
+*/
+    ODR_6_25_HZ,
+/** ODR_1_56_HZ corresponds to the 1.56Hz ODR
+*/
+    ODR_1_56_HZ,
+    AccODR_invalid,
+}TAccODR;
 
 
 
@@ -157,6 +189,9 @@ typedef struct {
 /** ACCDataCfgReg stores the most recent XYZ_DATA_CFG value read from accelerometer XYZ_DATA_CFG register
 */
     TACCDataCfgReg ACCDataCfgReg;
+/** AccODR stores the Output Data Rate (ODR) of accelerometer
+*/
+    TAccODR AccODR;
 }TACCCtrl;
 
 

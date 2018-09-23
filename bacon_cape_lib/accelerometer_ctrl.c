@@ -25,7 +25,7 @@
 
 /* General / i2c defines */
 #define ACCELEROMETER_FILE          "/dev/i2c-2"
-#define WAIT_TIME_ACCELEROMETER     100000  /* 100000us = 100ms */
+#define WAIT_TIME_ACCELEROMETER     10000  /* 10000us = 10ms */
 #define ACC_IDENTITY_VALUE          0x2A
 
 /* Register addresses defines */
@@ -40,6 +40,7 @@
 #define REG_ADDR_INT_SOURCE            0x0C
 #define REG_ADDR_WHO_AM_I              0x0D
 #define RED_ADDR_XYZ_DATA_CFG          0x0E
+#define RED_ADDR_CTRL_REG1             0x2A
 
 /* Status Register defines */
 #define REG_STATUS_MASK_X_ACC_AVAILABLE        0b00000001
@@ -86,6 +87,9 @@ void parse_int_src_register_value(TACCCtrl * ptACC, unsigned char reg_value);
 void parse_xyz_data_cfg_register_value(TACCCtrl * ptACC, unsigned char reg_value);
 int single_byte_read_register(TACCCtrl * ptACC, unsigned char register_to_read, unsigned char * ptRegValue);
 int single_byte_write_register(TACCCtrl * ptACC, unsigned char register_to_write, unsigned char byte_to_write);
+int set_stand_by_mode(TACCCtrl * ptACC);
+int set_active_mode(TACCCtrl * ptACC);
+int change_ODR(TACCCtrl * ptACC);
 
 /**Parse information of Status register\n
         Parse information of Status register and stores parsed data in accelerometer structure variable
@@ -163,15 +167,30 @@ int read_accelerometer_identity(TACCCtrl * ptACC)
     */
 
    if (ptACC->accelerometer_config == 0)
+   {
+       printf("\r\nPonto 1\n");
        return ACC_CTRL_ERROR;
+   }
 
-   ret = single_byte_read_register(ptACC, REG_ADDR_WHO_AM_I, &reg_who_am_I_value);
+   ret = set_stand_by_mode(ptACC);
+
+   if (ret == ACC_CTRL_SUCCESS)
+      ret = single_byte_read_register(ptACC, REG_ADDR_WHO_AM_I, &reg_who_am_I_value);
+   else 
+       printf("\r\nPonto 2\n");
 
    if (ret == ACC_CTRL_SUCCESS)
    {
        if (reg_who_am_I_value != ACC_IDENTITY_VALUE)
            ret = ACC_CTRL_ERROR;
    }
+   else
+       printf("\r\nPonto 3\n");
+
+   if (ret == ACC_CTRL_SUCCESS)
+      ret = set_active_mode(ptACC);
+   else
+       printf("\r\nPonto 4  reg_who_am_I_value = %02X \n", reg_who_am_I_value);
 
    return ret;
 }
@@ -206,12 +225,33 @@ int setup_accelerometer(TACCCtrl * ptACC)
             ret = ACC_CTRL_ERROR;
         else
         {
-            /* Set config flag and init raw accelerations variables */
+            /* So far, so good */
             ptACC->accelerometer_config = 1;
+
+            /* Change output data rate */
+            if (ret == ACC_CTRL_SUCCESS)
+                ret = read_accelerometer_identity(ptACC);
+
+            /* Change output data rate */
+            if (ret == ACC_CTRL_SUCCESS)
+                ret = change_ODR(ptACC);
+
+            /* Change sensibility and HPF */
+            if (ret == ACC_CTRL_SUCCESS)
+                ret = write_xyz_data_cfg(ptACC);
+
+            /* Set config flag and init raw accelerations variables */
+            if (ret == ACC_CTRL_SUCCESS)
+                ptACC->accelerometer_config = 1;
+
             ptACC->accelerometer_x_raw = 0;
             ptACC->accelerometer_y_raw = 0;
             ptACC->accelerometer_z_raw = 0;
             ptACC->accelerations_ready = AccStatus_not_ready;
+
+            /* Set accelerometer active mode (to accelerometer starts sampling) */
+            if (ret == ACC_CTRL_SUCCESS)
+                ret = set_active_mode(ptACC);
         }
     }
 
@@ -243,10 +283,6 @@ int single_byte_read_register(TACCCtrl * ptACC, unsigned char register_to_read, 
     int ret = ACC_CTRL_SUCCESS;
     unsigned char reg_value = 0x00;
     unsigned char reg_to_read = register_to_read;
-
-    /* If accelerometer hasn't been configured yet, there's nothing to do here */
-    if (ptACC->accelerometer_config == 0)
-        return ACC_CTRL_ERROR;
 
     if (write(ptACC->i2c_descriptor, &reg_to_read, 1) != 1)
         ret = ACC_CTRL_ERROR;
@@ -280,10 +316,6 @@ int single_byte_write_register(TACCCtrl * ptACC, unsigned char register_to_write
     int bytes_written = 0;
     unsigned char buffer_write[2]={0};
 
-    /* If accelerometer hasn't been configured yet, there's nothing to do here */
-    if (ptACC->accelerometer_config == 0)
-        return ACC_CTRL_ERROR;
-
     /* Prepare buffer for writing operation  */
     buffer_write[0] = register_to_write;
     buffer_write[1] = byte_to_write;
@@ -291,6 +323,7 @@ int single_byte_write_register(TACCCtrl * ptACC, unsigned char register_to_write
     usleep(WAIT_TIME_ACCELEROMETER);
 
     bytes_written = write(ptACC->i2c_descriptor, buffer_write, 2);
+
     if (bytes_written != 2)
         ret = ACC_CTRL_ERROR;
 
@@ -325,12 +358,18 @@ int read_raw_accelerations_x_y_z(TACCCtrl * ptACC)
     *   accelerometer structure variable.
     */
 
+    ptACC->accelerations_ready = AccStatus_not_ready;
+
     if (ptACC->accelerometer_config == 0)
         return ACC_CTRL_ERROR;
 
-    ptACC->accelerations_ready = AccStatus_not_ready;
-    ret = single_byte_read_register(ptACC, REG_ADDR_STATUS, &reg_status_value);
-    parse_status_register_value(&ACCStatusReg, reg_status_value);
+    ret = set_stand_by_mode(ptACC);
+
+    if (ret == ACC_CTRL_SUCCESS)
+    {
+        ret = single_byte_read_register(ptACC, REG_ADDR_STATUS, &reg_status_value);
+        parse_status_register_value(&ACCStatusReg, reg_status_value);
+    }
 
     if ((ret == ACC_CTRL_SUCCESS) && (ACCStatusReg.xyz_new_data_ready))
     {
@@ -354,6 +393,9 @@ int read_raw_accelerations_x_y_z(TACCCtrl * ptACC)
     }
     else
         ret = ACC_CTRL_ERROR;
+
+    if (ret == ACC_CTRL_SUCCESS)
+        ret = set_active_mode(ptACC);
 
     return ret;
 }
@@ -379,10 +421,15 @@ int read_accelerometer_mode(TACCCtrl * ptACC)
     if (ptACC->accelerometer_config == 0)
         return ACC_CTRL_ERROR;
 
-    ret = single_byte_read_register(ptACC, REG_ADDR_SYSMOD, &reg_mode_value);
+    ret = set_stand_by_mode(ptACC);
+
+    if (ret == ACC_CTRL_SUCCESS)
+        ret = single_byte_read_register(ptACC, REG_ADDR_SYSMOD, &reg_mode_value);
 
     if (ret == ACC_CTRL_SUCCESS)
         ptACC->accelerometer_mode = reg_mode_value;
+
+    ret = set_active_mode(ptACC);
 
     return ret;
 }
@@ -408,10 +455,18 @@ int read_int_source(TACCCtrl * ptAcc)
     if (ptAcc->accelerometer_config == 0)
         return ACC_CTRL_ERROR;
 
-   ret = single_byte_read_register(ptAcc, REG_ADDR_INT_SOURCE, &reg_int_source_value);
-   parse_int_src_register_value(ptAcc,reg_int_source_value);
+    ret = set_stand_by_mode(ptAcc);
 
-   return ret;
+    if (ret == ACC_CTRL_SUCCESS)
+    {
+        ret = single_byte_read_register(ptAcc, REG_ADDR_INT_SOURCE, &reg_int_source_value);
+        parse_int_src_register_value(ptAcc,reg_int_source_value);
+    }
+
+    if (ret == ACC_CTRL_SUCCESS)
+        ret = set_active_mode(ptAcc);
+
+    return ret;
 }
 
 /**Read xyz data cfg register\n
@@ -435,10 +490,17 @@ int read_xyz_data_cfg(TACCCtrl * ptAcc)
     if (ptAcc->accelerometer_config == 0)
         return ACC_CTRL_ERROR;
 
-   ret = single_byte_read_register(ptAcc, RED_ADDR_XYZ_DATA_CFG, &reg_xyz_data_cfg_value);
-   parse_xyz_data_cfg_register_value(ptAcc,reg_xyz_data_cfg_value);
+    ret = set_stand_by_mode(ptAcc);
 
-   return ret;
+    if (ret == ACC_CTRL_SUCCESS)
+    {
+        ret = single_byte_read_register(ptAcc, RED_ADDR_XYZ_DATA_CFG, &reg_xyz_data_cfg_value);
+        parse_xyz_data_cfg_register_value(ptAcc,reg_xyz_data_cfg_value);
+    }
+
+    ret = set_active_mode(ptAcc);
+
+    return ret;
 }
 
 /**Write xyz data cfg register\n
@@ -463,6 +525,8 @@ int write_xyz_data_cfg(TACCCtrl * ptAcc)
     if (ptAcc->accelerometer_config == 0)
         return ACC_CTRL_ERROR;
 
+    ret = set_stand_by_mode(ptAcc);
+
     if (ptAcc->ACCDataCfgReg.HPF_status)
         reg_xyz_data_cfg_value = reg_xyz_data_cfg_value | REG_XYZ_DATA_CFG_HPF;
 
@@ -483,8 +547,82 @@ int write_xyz_data_cfg(TACCCtrl * ptAcc)
             return ACC_CTRL_ERROR;
     }
 
-    ret = single_byte_write_register(ptAcc, RED_ADDR_XYZ_DATA_CFG, reg_xyz_data_cfg_value);
+    if (ret == ACC_CTRL_SUCCESS)
+        ret = single_byte_write_register(ptAcc, RED_ADDR_XYZ_DATA_CFG, reg_xyz_data_cfg_value);
+
+    if (ret == ACC_CTRL_SUCCESS)
+        ret = set_active_mode(ptAcc);
 
     return ret;
+}
+
+/**Set stand by mode on\n
+        This function sets accelerometer's stand-by mode on.
+        @param[in] ptAcc - pointer to accelerometer structure variable
+        @return Success or fail (ACC_CTRL_SUCCESS or ACC_CTRL_ERROR)
+*/
+int set_stand_by_mode(TACCCtrl * ptACC)
+{
+    unsigned char reg_ctrl_reg1_value = 0x00;
+    int ret = ACC_CTRL_SUCCESS;
+
+    ret = single_byte_read_register(ptACC, RED_ADDR_CTRL_REG1, &reg_ctrl_reg1_value);
+
+    if (ret == ACC_CTRL_SUCCESS)
+    {
+        reg_ctrl_reg1_value = reg_ctrl_reg1_value & 0xFE;
+        ret = single_byte_write_register(ptACC, RED_ADDR_CTRL_REG1, reg_ctrl_reg1_value);
+    }
+
+    return ret;
+}
+
+/**Set active mode on\n
+        This function sets accelerometer's active mode on.
+        @param[in] ptAcc - pointer to accelerometer structure variable
+        @return Success or fail (ACC_CTRL_SUCCESS or ACC_CTRL_ERROR)
+*/
+int set_active_mode(TACCCtrl * ptACC)
+{
+    unsigned char reg_ctrl_reg1_value = 0x00;
+    int ret = ACC_CTRL_SUCCESS;
+
+    ret = single_byte_read_register(ptACC, RED_ADDR_CTRL_REG1, &reg_ctrl_reg1_value);
+
+    if (ret == ACC_CTRL_SUCCESS)
+    {
+        reg_ctrl_reg1_value = reg_ctrl_reg1_value | 0x01;
+        ret = single_byte_write_register(ptACC, RED_ADDR_CTRL_REG1, reg_ctrl_reg1_value);
+    }
+
+    return ret;
+}
+
+/**Change ODR (output Data Rate\n
+        This function changes the ODR accordingly accelerometer structure variable
+        @param[in] ptAcc - pointer to accelerometer structure variable
+        @return Success or fail (ACC_CTRL_SUCCESS or ACC_CTRL_ERROR)
+*/
+int change_ODR(TACCCtrl * ptACC)
+{
+    int ret = ACC_CTRL_SUCCESS;
+    unsigned char reg_ctrl_reg1_value = 0x00;
+
+    ret = set_stand_by_mode(ptACC);
+
+    if (ret == ACC_CTRL_SUCCESS)
+       ret = single_byte_read_register(ptACC, RED_ADDR_CTRL_REG1, &reg_ctrl_reg1_value);
+
+    if (ret == ACC_CTRL_SUCCESS)
+    {
+        reg_ctrl_reg1_value = reg_ctrl_reg1_value & 0xC7;
+        reg_ctrl_reg1_value = reg_ctrl_reg1_value | (ptACC->AccODR << 3);
+        ret = single_byte_write_register(ptACC, RED_ADDR_CTRL_REG1, reg_ctrl_reg1_value);
+    }
+
+     if (ret == ACC_CTRL_SUCCESS)
+        ret = set_active_mode(ptACC);
+
+     return ret;
 }
 /** @} */
