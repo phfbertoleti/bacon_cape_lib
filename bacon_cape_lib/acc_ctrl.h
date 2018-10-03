@@ -199,10 +199,5 @@ typedef struct {
 /* Prototypes */
 int setup_accelerometer(TACCCtrl * ptACC);
 int close_accelerometer(TACCCtrl * ptACC);
-int read_accelerometer_identity(TACCCtrl * ptACC);
 int read_raw_accelerations_x_y_z(TACCCtrl * ptACC);
-int read_accelerometer_mode(TACCCtrl * ptACC);
-int read_int_source(TACCCtrl * ptAcc);
-int read_xyz_data_cfg(TACCCtrl * ptAcc);
-int write_xyz_data_cfg(TACCCtrl * ptAcc);
 #endif

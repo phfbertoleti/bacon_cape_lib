@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "../bacon_cape_lib/accelerometer_ctrl.h"
+#include "../bacon_cape_lib/acc_ctrl.h"
 
 
 /* Main program */
@@ -18,8 +18,6 @@ int main(void)
    /* Fill information about accelerometer */
    Acc.accelerometer_config = 0;
    Acc.accelerometer_addr = ACCELEROMETER_ADDR;
-   Acc.AccODR = ODR_1_56_HZ;
-   Acc.ACCDataCfgReg.AccSensibility = AccSensibility_2g;
 
    /* Setup accelerometer */
    printf("\n\r[STATUS] Setting up accelerometer...\n\n");
