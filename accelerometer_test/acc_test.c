@@ -9,15 +9,25 @@
 #include <unistd.h>
 #include "../bacon_cape_lib/acc_ctrl.h"
 
+#define MAX_ACCELERATION   (4096/2)  /* 12-bits of resolution (dual polarity) */
+
+/* constants  */
+const int acc_factor[3] = {2,4,8}; /* 2g, 4g and 8g factors */
 
 /* Main program */
 int main(void)
 {
    TACCCtrl Acc;
+   float acc_x = 0.0;
+   float acc_y = 0.0;
+   float acc_z = 0.0;
 
    /* Fill information about accelerometer */
    Acc.accelerometer_config = 0;
    Acc.accelerometer_addr = ACCELEROMETER_ADDR;
+   Acc.ACCDataCfgReg.AccSensibility = AccSensibility_2g;
+   Acc.ACCDataCfgReg.HPF_status = 0;
+
 
    /* Setup accelerometer */
    printf("\n\r[STATUS] Setting up accelerometer...\n\n");
@@ -34,7 +44,14 @@ int main(void)
    {
         /* read raw accelerations and print them where they were successfully read */
         while (read_raw_accelerations_x_y_z(&Acc) != ACC_CTRL_SUCCESS);
-        printf("\rrRaw Acc. X = %d ; Raw Acc. Y = %d ; Raw Acc. Z = %d", Acc.accelerometer_x_raw, Acc.accelerometer_y_raw, Acc.accelerometer_z_raw);
+
+        /* calculate the read acceleration */
+        acc_x = ((float)Acc.accelerometer_x_raw/MAX_ACCELERATION)*acc_factor[Acc.ACCDataCfgReg.AccSensibility];
+        acc_y = ((float)Acc.accelerometer_y_raw/MAX_ACCELERATION)*acc_factor[Acc.ACCDataCfgReg.AccSensibility];
+        acc_z = ((float)Acc.accelerometer_z_raw/MAX_ACCELERATION)*acc_factor[Acc.ACCDataCfgReg.AccSensibility];
+
+        printf("\rAcc X = %1.2fg ; Acc Y = %1.2fg ; Acc Z = %1.2fg ", acc_x, acc_y, acc_z);
+        //printf("\rRaw Acc. X = %04d ; Raw Acc. Y = %04d ; Raw Acc. Z = %04d ", Acc.accelerometer_x_raw, Acc.accelerometer_y_raw, Acc.accelerometer_z_raw);
    }
 
    close_accelerometer(&Acc);

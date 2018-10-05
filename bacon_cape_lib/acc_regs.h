@@ -16,8 +16,8 @@
 #define REG_ADDR_SYSMOD                0x0B
 #define REG_ADDR_INT_SOURCE            0x0C
 #define REG_ADDR_WHO_AM_I              0x0D
-#define RED_ADDR_XYZ_DATA_CFG          0x0E
-#define RED_ADDR_CTRL_REG1             0x2A
+#define REG_ADDR_XYZ_DATA_CFG          0x0E
+#define REG_ADDR_CTRL_REG1             0x2A
 
 /* Status Register defines */
 #define REG_STATUS_MASK_X_ACC_AVAILABLE        0b00000001

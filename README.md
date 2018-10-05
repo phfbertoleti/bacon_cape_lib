@@ -7,7 +7,7 @@ This library is under development. At this moment it covers the following Bacon 
 - Slider read
 - EEPROM write and read (to write EEPROM, a little hardware hack is needed: short-circuit C2 capacitor)
 - 7-segment display (for alfanum chars from 0 to F)
-- Accelerometer things (examples and library) aren't done yet/aren't working yet. 
+- Accelerometer raw measuring (x, y and z axis) and scale/sensitivity setting. 
 
 Also, this repository contains two examples:
 - lib_validator: a simple program to validate all features covered by the bacon_cape_lib

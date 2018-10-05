@@ -44,7 +44,7 @@ int standby_mode(TACCCtrl * ptACC)
     int bytes_written = 0;
     int ret = ACC_CTRL_SUCCESS;
 
-    buffer_standby[0] = RED_ADDR_CTRL_REG1;
+    buffer_standby[0] = REG_ADDR_CTRL_REG1;
     buffer_standby[1] = 0x00;
     bytes_written = write(ptACC->i2c_descriptor, buffer_standby, 2);
 
@@ -66,7 +66,7 @@ int active_mode(TACCCtrl * ptACC)
     int bytes_written = 0;
     int ret = ACC_CTRL_SUCCESS;
 
-    buffer_active[0] = RED_ADDR_CTRL_REG1;
+    buffer_active[0] = REG_ADDR_CTRL_REG1;
     buffer_active[1] = 0x01;
     bytes_written = write(ptACC->i2c_descriptor, buffer_active, 2);
 
@@ -111,6 +111,9 @@ int setup_accelerometer(TACCCtrl * ptACC)
             ptACC->accelerometer_config = 1;
 
             ret[idx_ret] = standby_mode(ptACC);
+            idx_ret++;
+
+            ret[idx_ret] = write_xyz_data_cfg(ptACC);
             idx_ret++;
 
             ret[idx_ret] = active_mode(ptACC);
@@ -195,6 +198,31 @@ int read_raw_accelerations_x_y_z(TACCCtrl * ptACC)
     }
 
     return ret;
+}
+
+/**Write XYX Data CFG \n
+        This function writed XYZ Data Cfg Register (scale and HPF configs)\n
+        @param[in] ptACC - pointer to accelerometer structure variable
+        @return Success or fail (ACC_CTRL_SUCCESS or ACC_CTRL_ERROR)
+*/
+int write_xyz_data_cfg(TACCCtrl * ptACC)
+{
+    char buffer_xyz_data_cfg[2] = {0};
+    int bytes_written = 0;
+    int ret = ACC_CTRL_SUCCESS;
+
+    buffer_xyz_data_cfg[0] = REG_ADDR_XYZ_DATA_CFG;
+    buffer_xyz_data_cfg[1] = (ptACC->ACCDataCfgReg.AccSensibility) | (ptACC->ACCDataCfgReg.HPF_status << 5);
+
+    printf("\r\nReg XYZ Data CFG = %02X\n",buffer_xyz_data_cfg[1]);
+
+    bytes_written = write(ptACC->i2c_descriptor, buffer_xyz_data_cfg, 2);
+
+    if (bytes_written != 2)
+        ret = ACC_CTRL_ERROR;
+
+    return ret;
+
 }
 
 /** @} */
